@@ -13,6 +13,7 @@ class User(AbstractUser):
     is_student = models.BooleanField(default=False)
     avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
     is_active = models.BooleanField(default=True)
+    is_staff = models.BooleanField(default=False)
 
     def __str__(self):
         return self.username
@@ -65,8 +66,8 @@ class Admin(User):
         self.is_admin = True
         super().save(*args, **kwargs)
 
-# Mô hình Student kế thừa từ User
 class Student(User):
+
     class Meta:
         verbose_name = 'Student'
         verbose_name_plural = 'Students'
@@ -75,11 +76,14 @@ class Student(User):
         self.is_student = True
         super().save(*args, **kwargs)
 
-# Mô hình Teacher kế thừa từ User
 class Teacher(User):
+    hocvi = models.CharField(max_length=50)
     class Meta:
         verbose_name = 'Teacher'
         verbose_name_plural = 'Teachers'
+        permissions = [
+            ("can_change_teacher", "Can change teacher","can_change_Curriculum"),
+        ]
 
     def save(self, *args, **kwargs):
         self.is_teacher = True
