@@ -18,13 +18,19 @@ class User(AbstractUser):
     def __str__(self):
         return self.username
 
+class Category(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return self.name
 class BaseModel(models.Model):
-    created_at = models.DateTimeField( auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     active = models.BooleanField(default=True)
 
     class Meta:
         abstract = True
+        ordering = ['-id']
 
 class Course(BaseModel):
     name = models.CharField(max_length=255)
@@ -37,10 +43,20 @@ class Curriculum(BaseModel):
     teacher = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
     description = models.TextField()
+    start_year = models.IntegerField()
+    end_year = models.IntegerField()
+
+    def __str__(self):
+        return f"{self.course.name} ({self.start_year}-{self.end_year})"
+
+
+class Syllabus(models.Model):
+    title = models.CharField(max_length=255)
+    content = models.TextField()
+    curriculums = models.ManyToManyField(Curriculum)
 
     def __str__(self):
         return self.title
-
 class EvaluationCriterion(BaseModel):
     curriculum = models.ForeignKey(Curriculum, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
@@ -77,7 +93,7 @@ class Student(User):
         super().save(*args, **kwargs)
 
 class Teacher(User):
-    hocvi = models.CharField(max_length=50)
+    HocVi = models.CharField(max_length=50)
     class Meta:
         verbose_name = 'Teacher'
         verbose_name_plural = 'Teachers'
@@ -88,3 +104,6 @@ class Teacher(User):
     def save(self, *args, **kwargs):
         self.is_teacher = True
         super().save(*args, **kwargs)
+
+
+
