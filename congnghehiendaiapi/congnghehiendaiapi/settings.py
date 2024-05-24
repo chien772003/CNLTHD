@@ -37,7 +37,17 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'courses.apps.CoursesConfig',
     'rest_framework',
+    'cloudinary',
+    'cloudinary_storage',
 ]
+
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': 'dowwtsbw8',
+    'API_KEY': '232847332119715',
+    'API_SECRET': 'QfB3K6IY11Z78VJ6WxGTDzTsNjA'
+}
+
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 MEDIA_ROOT = '%s/courses/static/' % BASE_DIR
 
@@ -87,7 +97,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'coursedb',
         'USER': 'root',
-        'PASSWORD': 'Chien@2003',
+        'PASSWORD': 'Huyphu123@',
         'HOST': ''
     }
 }
