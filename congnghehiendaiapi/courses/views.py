@@ -11,6 +11,11 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
+    def get_permissions(self):
+        if self.action == 'list':
+            return [permissions.AllowAny()]
+        return [permissions.IsAuthenticated()]
+
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
@@ -19,6 +24,10 @@ class CourseViewSet(viewsets.ModelViewSet):
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
 
+    def get_permissions(self):
+        if self.action == 'list':
+            return [permissions.AllowAny()]
+        return [permissions.IsAuthenticated()]
 class CurriculumViewSet(viewsets.ModelViewSet):
     queryset = Curriculum.objects.all()
     serializer_class = CurriculumSerializer
@@ -26,6 +35,7 @@ class CurriculumViewSet(viewsets.ModelViewSet):
 class SyllabusViewSet(viewsets.ModelViewSet):
     queryset = Syllabus.objects.all()
     serializer_class = SyllabusSerializer
+
 
 class EvaluationCriterionViewSet(viewsets.ModelViewSet):
     queryset = EvaluationCriterion.objects.all()

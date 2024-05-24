@@ -50,6 +50,14 @@ class Curriculum(BaseModel):
     start_year = models.IntegerField(default=2021)
     end_year = models.IntegerField(default=2025)
 
+    class Curriculum(BaseModel):
+        # ...
+        class Meta:
+            permissions = [
+                ("can_add_curriculum", "Can add curriculum"),
+                ("can_view_curriculum", "Can view curriculum"),
+            ]
+
     def __str__(self):
         return f"{self.course.name} ({self.start_year}-{self.end_year})"
 
@@ -93,7 +101,7 @@ class Student(User):
         verbose_name_plural = 'Students'
 
     def save(self, *args, **kwargs):
-        self.is_student = True
+        self.is_teacher = True
         super().save(*args, **kwargs)
 
 class Teacher(User):

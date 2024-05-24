@@ -54,9 +54,15 @@ MEDIA_ROOT = '%s/courses/static/' % BASE_DIR
 AUTH_USER_MODEL = 'courses.User'
 
 REST_FRAMEWORK = {
-    'DEFAULT_PAGINATION_CLASS':'rest_framework.pagination.PageNumberPagination','PAGE_SIZE':2
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 2,
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+        'rest_framework.permissions.AllowAny',
 
+    ],
 }
+
 
 
 MIDDLEWARE = [
@@ -97,7 +103,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'coursedb',
         'USER': 'root',
-        'PASSWORD': 'Huyphu123@',
+        'PASSWORD': 'Chien@2003',
         'HOST': ''
     }
 }
