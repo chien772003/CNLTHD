@@ -7,7 +7,11 @@ from .models import User, Category, Course, Curriculum, Syllabus, EvaluationCrit
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'first_name', 'last_name', 'birth_year', 'is_teacher', 'is_student', 'avatar', 'is_active', 'is_staff']
+        fields = ['id', 'username', 'first_name', 'last_name', 'avatar', 'is_active', 'is_staff']
+        extra_kwargs = {
+            'password': {'write_only': True},
+            'avatar': {'write_only': True}
+        }
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:

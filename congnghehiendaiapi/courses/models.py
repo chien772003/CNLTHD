@@ -11,7 +11,7 @@ class User(AbstractUser):
     birth_year = models.PositiveIntegerField(null=True, blank=True)
     is_teacher = models.BooleanField(default=False)
     is_student = models.BooleanField(default=False)
-    avatar = CloudinaryField('avatar', null=True, blank=True)
+    avatar = models.ImageField('image/avatar/%Y/%m/%d/', null=True, blank=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
 

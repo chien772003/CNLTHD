@@ -37,8 +37,11 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'courses.apps.CoursesConfig',
     'rest_framework',
+    'rest_framework.authtoken',
     'cloudinary',
     'cloudinary_storage',
+    'oauth2_provider',
+    'drf_yasg'
 ]
 
 CLOUDINARY_STORAGE = {
@@ -61,9 +64,10 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.AllowAny',
 
     ],
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
+    )
 }
-
-
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -103,12 +107,13 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'coursedb',
         'USER': 'root',
-        'PASSWORD': 'Chien@2003',
+        'PASSWORD': 'Huyphu123@',
         'HOST': ''
     }
 }
 
 import pymysql
+
 pymysql.install_as_MySQLdb()
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
