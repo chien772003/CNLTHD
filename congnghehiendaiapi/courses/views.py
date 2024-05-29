@@ -2,24 +2,32 @@ from django.shortcuts import render
 from rest_framework import viewsets, permissions, status, parsers, generics
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from .models import User, Category, Course, Curriculum, Syllabus, EvaluationCriterion, Comment, Admin, Student, Teacher
-from .serializers import UserSerializer, CategorySerializer, CourseSerializer, CurriculumSerializer, SyllabusSerializer, EvaluationCriterionSerializer, CommentSerializer, AdminSerializer, StudentSerializer, TeacherSerializer
+from .models import User, Category, Course, Curriculum, Syllabus, EvaluationCriterion, Comment
+from .serializers import UserSerializer, CategorySerializer, CourseSerializer, CurriculumSerializer, SyllabusSerializer, EvaluationCriterionSerializer, CommentSerializer
 from courses import serializers, paginators
+
 
 class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.ListAPIView, generics.RetrieveAPIView):
     queryset = User.objects.filter(is_active=True)
     serializer_class = UserSerializer
     parser_classes = [parsers.MultiPartParser]
-    # permission_classes = [permissions.IsAuthenticated]
 
     def get_permissions(self):
         if self.action in ['list', 'retrieve']:
             return [permissions.AllowAny()]
         return [permissions.IsAuthenticated()]
 
+    def perform_create(self, serializer):
+        user = serializer.save()
+        if user.is_teacher:
+            user.is_active = False
+            user.save()
+
+
 class CategoryViewSet(viewsets.ViewSet, generics.ListAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+
 
 class CourseViewSet(viewsets.ViewSet, generics.ListAPIView):
     queryset = Course.objects.filter(active=True)
@@ -42,30 +50,25 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView):
         lessons = course.lesson_set.filter(active=True)
         return Response(serializers.LessonSerializer(lessons, many=True).data, status=status.HTTP_200_OK)
 
-class CurriculumViewSet(viewsets.ViewSet, generics.ListAPIView):
+
+class CurriculumViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIView, generics.CreateAPIView, generics.UpdateAPIView):
     queryset = Curriculum.objects.all()
     serializer_class = CurriculumSerializer
 
-class SyllabusViewSet(viewsets.ViewSet, generics.ListAPIView):
+
+class SyllabusViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIView, generics.CreateAPIView, generics.UpdateAPIView):
     queryset = Syllabus.objects.all()
     serializer_class = SyllabusSerializer
 
-class EvaluationCriterionViewSet(viewsets.ViewSet, generics.ListAPIView):
+
+class EvaluationCriterionViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIView, generics.CreateAPIView, generics.UpdateAPIView):
     queryset = EvaluationCriterion.objects.all()
     serializer_class = EvaluationCriterionSerializer
 
-class CommentViewSet(viewsets.ViewSet, generics.ListAPIView):
+
+class CommentViewSet(viewsets.ViewSet, generics.ListAPIView, generics.CreateAPIView):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
 
-class AdminViewSet(viewsets.ViewSet, generics.CreateAPIView):
-    queryset = Admin.objects.all()
-    serializer_class = AdminSerializer
-
-class StudentViewSet(viewsets.ViewSet, generics.CreateAPIView):
-    queryset = Student.objects.all()
-    serializer_class = StudentSerializer
-
-class TeacherViewSet(viewsets.ViewSet, generics.CreateAPIView):
-    queryset = Teacher.objects.all()
-    serializer_class = TeacherSerializer
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
