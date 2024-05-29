@@ -41,8 +41,12 @@ INSTALLED_APPS = [
     'cloudinary',
     'cloudinary_storage',
     'oauth2_provider',
-    'drf_yasg'
+    'drf_yasg',
+    'ckeditor',
+    'ckeditor_uploader',
 ]
+
+CKEDITOR_UPLOAD_PATH = "ckeditor/images/"
 
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': 'dowwtsbw8',

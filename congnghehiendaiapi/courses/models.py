@@ -3,7 +3,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
 from cloudinary.models import CloudinaryField
-
+from ckeditor.fields import RichTextField
 class User(AbstractUser):
     id = models.AutoField(primary_key=True)  # Trường ID tự động tăng, làm khóa chính
     first_name = models.CharField(max_length=30)  # Tên (first name)
@@ -60,25 +60,32 @@ class Curriculum(BaseModel):
 
 class Syllabus(models.Model):
     title = models.CharField(max_length=255)
-    content = models.TextField()
-    curriculums = models.ManyToManyField(Curriculum)
+    content = RichTextField()
+    curriculum = models.ForeignKey(Curriculum, on_delete=models.CASCADE, null=True)
 
     def __str__(self):
         return self.title
 
 class EvaluationCriterion(BaseModel):
-    curriculum = models.ForeignKey(Curriculum, on_delete=models.CASCADE)
+    curriculum = models.ForeignKey(Curriculum, on_delete=models.CASCADE, null=True)
     name = models.CharField(max_length=255)
     weight = models.DecimalField(max_digits=5, decimal_places=2)
     max_score = models.DecimalField(max_digits=5, decimal_places=2)
 
     def __str__(self):
         return self.name
+class CurriculumEvaluation(BaseModel):
+    curriculum = models.ForeignKey(Curriculum, on_delete=models.CASCADE,null=True)
+    evaluation_criterion = models.ForeignKey(EvaluationCriterion, on_delete=models.CASCADE)
+    score = models.DecimalField(max_digits=5, decimal_places=2)
+
+    def __str__(self):
+        return f'{self.curriculum.title} - {self.evaluation_criterion.name}'
 
 class Comment(BaseModel):
     curriculum = models.ForeignKey(Curriculum, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    content = models.TextField()
+    content = RichTextField()
 
     def __str__(self):
         return f'{self.user.username} - {self.curriculum.title}'

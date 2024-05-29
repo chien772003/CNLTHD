@@ -2,7 +2,7 @@ from rest_framework.serializers import ModelSerializer
 from .models import Course
 
 from rest_framework import serializers
-from .models import User, Category, Course, Curriculum, Syllabus, EvaluationCriterion, Comment
+from .models import User, Category, Course, Curriculum, Syllabus, EvaluationCriterion, Comment, CurriculumEvaluation
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -54,6 +54,15 @@ class EvaluationCriterionSerializer(serializers.ModelSerializer):
     class Meta:
         model = EvaluationCriterion
         fields = ['id', 'curriculum', 'name', 'weight', 'max_score', 'created_at', 'updated_at', 'active']
+
+
+class CurriculumEvaluationSerializer(serializers.ModelSerializer):
+    curriculum_title = serializers.CharField(source='curriculum.title', read_only=True)
+    evaluation_criterion_name = serializers.CharField(source='evaluation_criterion.name', read_only=True)
+
+    class Meta:
+        model = CurriculumEvaluation
+        fields = ['id', 'curriculum', 'curriculum_title', 'evaluation_criterion', 'evaluation_criterion_name', 'score', 'created_at', 'updated_at', 'active']
 
 class CommentSerializer(serializers.ModelSerializer):
     class Meta:
