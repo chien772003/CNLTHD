@@ -14,6 +14,7 @@ Including another URLconf
     1. Import to include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+import debug_toolbar
 from django.contrib import admin
 from django.urls import path, include, re_path
 from rest_framework import permissions
@@ -36,7 +37,7 @@ urlpatterns = [
     path('', include('courses.urls')),
     path('admin/', admin.site.urls),
     re_path(r'^ckeditor/',include('ckeditor_uploader.urls')),
-
+    path('__debug__/', include(debug_toolbar.urls)),
     path('o/', include('oauth2_provider.urls',namespace='oauth2_provider')),
     re_path(r'^swagger(?P<format>\.json|\.yaml)$',schema_view.without_ui(cache_timeout=0),name='schema-json'),
     re_path(r'^swagger/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),

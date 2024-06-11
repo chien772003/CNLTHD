@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'drf_yasg',
     'ckeditor',
     'ckeditor_uploader',
+    'debug_toolbar',
 ]
 
 CKEDITOR_UPLOAD_PATH = "ckeditor/images/"
@@ -81,6 +82,11 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
+]
+
+INTERNAL_IPS = [
+    '127.0.0.1'
 ]
 
 ROOT_URLCONF = 'congnghehiendaiapi.urls'

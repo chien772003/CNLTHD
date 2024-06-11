@@ -8,7 +8,7 @@ from .models import User, Category, Course, Curriculum, Syllabus, EvaluationCrit
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'first_name', 'last_name', 'birth_year', 'avatar', 'is_active', 'is_staff', 'is_superuser', 'is_teacher', 'is_student', 'HocVi']
+        fields = ['id', 'username', 'first_name', 'last_name','email', 'birth_year', 'avatar', 'is_active', 'is_staff', 'is_superuser', 'is_teacher', 'is_student', 'HocVi', 'password']
         extra_kwargs = {
             'password': {'write_only': True}
         }
@@ -24,11 +24,14 @@ class UserSerializer(serializers.ModelSerializer):
             is_superuser=validated_data.get('is_superuser', False),
             is_teacher=validated_data.get('is_teacher', False),
             is_student=validated_data.get('is_student', False),
+            email=validated_data.get('email',False),
             HocVi=validated_data.get('HocVi', None)
         )
         user.set_password(validated_data['password'])
         user.save()
         return user
+
+
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -48,7 +51,7 @@ class CurriculumSerializer(serializers.ModelSerializer):
 class SyllabusSerializer(serializers.ModelSerializer):
     class Meta:
         model = Syllabus
-        fields = ['id', 'title', 'content', 'curriculums']
+        fields = ['id', 'title', 'content', 'curriculum']
 
 class EvaluationCriterionSerializer(serializers.ModelSerializer):
     class Meta:
@@ -68,3 +71,4 @@ class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = ['id', 'curriculum', 'user', 'content', 'created_at', 'updated_at', 'active']
+        read_only_fields = ['id', 'user']

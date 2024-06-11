@@ -13,7 +13,7 @@ class User(AbstractUser):
     is_student = models.BooleanField(default=False)
     avatar = models.ImageField(upload_to='images/avatar/%Y/%m/%d/', null=True, blank=True)
     HocVi = models.CharField(max_length=50, null=True, blank=True)  # Chỉ dành cho giáo viên
-
+    email = models.EmailField(blank=True, null=True)
     def __str__(self):
         return self.username
 

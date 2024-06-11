@@ -1,5 +1,8 @@
+from django.core.mail import send_mail
+from django.http import FileResponse
 from django.shortcuts import render
 from rest_framework import viewsets, permissions, status, parsers, generics,filters
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from .models import User, Category, Course, Curriculum, Syllabus, EvaluationCriterion, Comment
@@ -8,26 +11,102 @@ from .serializers import UserSerializer, CategorySerializer, CourseSerializer, C
 from courses import serializers, paginators
 
 
-class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.ListAPIView, generics.RetrieveAPIView):
-    queryset = User.objects.filter(is_active=True)
+class IsSuperuser(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return request.user and request.user.is_superuser
+class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.ListAPIView, generics.RetrieveAPIView, generics.DestroyAPIView):
+    queryset = User.objects.all()
     serializer_class = UserSerializer
     parser_classes = [parsers.MultiPartParser]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_permissions(self):
-        if self.action in ['list', 'retrieve']:
-            return [permissions.AllowAny()]
+        if self.action in ['list', 'retrieve', 'create', 'register_student', 'register_teacher', 'approve_student', 'approve_teacher']:
+            return [IsSuperuser()]
         return [permissions.IsAuthenticated()]
 
-    def perform_create(self, serializer):
-        user = serializer.save()
-        if user.is_teacher:
-            user.is_active = False
-            user.save()
+    # def perform_create(self, serializer):
+    #     user = serializer.save()
+    #     if user.is_teacher:
+    #         user.is_active = False
+    #         user.save()
+    #         send_mail(
+    #             'Account Registration',
+    #             'Your account has been registered. Please upload an avatar and provide additional information.',
+    #             'admin@example.com',
+    #             [user.email],
+    #             fail_silently=False,
+    #         )
+
+    @action(detail=False, methods=['post'], url_path='register-teacher')
+    def register_teacher(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save(is_active=False, is_teacher=True)
+        # send_mail(
+        #     'Teacher Registration Request',
+        #     'A new teacher has registered. Please review and approve the account.',
+        #     'admin@example.com',
+        #     ['admin@example.com'],
+        #     fail_silently=False,
+        # )
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    @action(detail=False, methods=['post'], url_path='register-student')
+    def register_student(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save(is_active=False, is_student=True)
+        # send_mail(
+        #     'Student Registration Request',
+        #     'A new student has registered. Please review and approve the account.',
+        #     'admin@example.com',
+        #     ['admin@example.com'],
+        #     fail_silently=False,
+        # )
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    @action(detail=True, methods=['patch'], url_path='approve-teacher')
+    def approve_teacher(self, request, pk=None):
+        user = self.get_object()
+        if not user.is_teacher or user.is_active:
+            raise PermissionDenied("Invalid teacher account.")
+        user.is_staff = True
+        user.is_active =True
+        user.save()
+        # send_mail(
+        #     'Account Approved',
+        #     'Your account has been approved. Please update your password and upload an avatar.',
+        #     'admin@example.com',
+        #     [user.email],
+        #     fail_silently=False,
+        # )
+        return Response(UserSerializer(user).data, status=status.HTTP_200_OK)
+    @action(detail=True, methods=['patch'], url_path='approve-student')
+    def approve_student(self, request, pk=None):
+        user = self.get_object()
+        if not user.is_student or user.is_active:
+            raise PermissionDenied("Invalid student account.")
+        user.is_active = True
+        user.save()
+        # send_mail(
+        #     'Account Approved',
+        #     'Your account has been approved. Please update your password and upload an avatar.',
+        #     'admin@example.com',
+        #     [user.email],
+        #     fail_silently=False,
+        # )
+        return Response(UserSerializer(user).data, status=status.HTTP_200_OK)
 
 
 class CategoryViewSet(viewsets.ViewSet, generics.ListAPIView, generics.CreateAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+
+    def get_permissions(self):
+        if self.action in ['list']:
+            return [permissions.AllowAny()]
+        elif self.action == 'create':
+            return [IsSuperuser()]
+        return [permissions.IsAuthenticated()]
 
 
 class CourseViewSet(viewsets.ViewSet, generics.ListAPIView):
@@ -56,6 +135,12 @@ class CurriculumViewSet(viewsets.ViewSet, generics.ListAPIView, generics.Retriev
     queryset = Curriculum.objects.all()
     serializer_class = CurriculumSerializer
 
+    def get_permissions(self):
+        if self.action in ['list']:
+            return [permissions.AllowAny()]
+        elif self.action == ['create','retrieve', 'update']:
+            return [IsSuperuser()]
+        return [permissions.IsAuthenticated()]
 
 class SyllabusViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIView, generics.CreateAPIView, generics.UpdateAPIView):
     queryset = Syllabus.objects.all()
@@ -86,15 +171,45 @@ class SyllabusViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveA
             queryset = queryset.filter(curriculums__end_year=end_year)
 
         return queryset
+    def get_permissions(self):
+        if self.action in ['list']:
+            return [permissions.AllowAny()]
+        elif self.action == ['create','retrieve', 'update']:
+            return [IsSuperuser()]
+        return [permissions.IsAuthenticated()]
 
+
+    @action(detail=True, methods=['get'], url_path='download')
+    def download_syllabus(self, request, pk=None):
+        syllabus = self.get_object()
+        file_handle = syllabus.file.open()
+        response = FileResponse(file_handle, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{syllabus.file.name}"'
+        return response
 
 class EvaluationCriterionViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIView, generics.CreateAPIView, generics.UpdateAPIView):
     queryset = EvaluationCriterion.objects.all()
     serializer_class = EvaluationCriterionSerializer
 
+    def get_permissions(self):
+        if self.action in ['list']:
+            return [permissions.AllowAny()]
+        elif self.action == ['create','retrieve', 'update']:
+            return [IsSuperuser()]
+        return [permissions.IsAuthenticated()]
+
+
+
 class CurriculumEvaluationViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.RetrieveAPIView):
     queryset = CurriculumEvaluation.objects.all()
     serializer_class = CurriculumEvaluationSerializer
+
+    def get_permissions(self):
+        if self.action in ['list']:
+            return [permissions.AllowAny()]
+        elif self.action == ['create','retrieve']:
+            return [IsSuperuser()]
+        return [permissions.IsAuthenticated()]
 
 class CommentViewSet(viewsets.ViewSet, generics.ListAPIView, generics.DestroyAPIView, generics.CreateAPIView):
     queryset = Comment.objects.all()
