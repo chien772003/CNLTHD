@@ -51,7 +51,7 @@ class CurriculumSerializer(serializers.ModelSerializer):
 class SyllabusSerializer(serializers.ModelSerializer):
     class Meta:
         model = Syllabus
-        fields = ['id', 'title', 'content', 'curriculum']
+        fields = ['id', 'title', 'content', 'curriculum', 'file']
 
 class EvaluationCriterionSerializer(serializers.ModelSerializer):
     class Meta:

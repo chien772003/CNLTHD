@@ -54,6 +54,12 @@ CLOUDINARY_STORAGE = {
     'API_KEY': '232847332119715',
     'API_SECRET': 'QfB3K6IY11Z78VJ6WxGTDzTsNjA'
 }
+# import  cloudinary
+# cloudinary.config(
+#     cloud_name="dowwtsbw8",
+#     api_key="232847332119715",
+#     api_secret="QfB3K6IY11Z78VJ6WxGTDzTsNjA"
+# )
 
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 

@@ -18,10 +18,12 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.ListAPIView
     queryset = User.objects.all()
     serializer_class = UserSerializer
     parser_classes = [parsers.MultiPartParser]
-    permission_classes = [permissions.IsAuthenticated]
+
 
     def get_permissions(self):
-        if self.action in ['list', 'retrieve', 'create', 'register_student', 'register_teacher', 'approve_student', 'approve_teacher']:
+        if self.action in ['create', 'register_student', 'register_teacher','list'  ]:
+            return [permissions.AllowAny()]
+        if self.action in [ 'retrieve', 'approve_student', 'approve_teacher']:
             return [IsSuperuser()]
         return [permissions.IsAuthenticated()]
 
@@ -70,7 +72,7 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.ListAPIView
         if not user.is_teacher or user.is_active:
             raise PermissionDenied("Invalid teacher account.")
         user.is_staff = True
-        user.is_active =True
+        user.is_active = True
         user.save()
         # send_mail(
         #     'Account Approved',
@@ -86,6 +88,7 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.ListAPIView
         if not user.is_student or user.is_active:
             raise PermissionDenied("Invalid student account.")
         user.is_active = True
+        user.is_staff = True
         user.save()
         # send_mail(
         #     'Account Approved',
@@ -174,12 +177,11 @@ class SyllabusViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveA
     def get_permissions(self):
         if self.action in ['list']:
             return [permissions.AllowAny()]
-        elif self.action == ['create','retrieve', 'update']:
+        elif self.action in ['create', 'retrieve', 'update']:
             return [IsSuperuser()]
         return [permissions.IsAuthenticated()]
 
-
-    @action(detail=True, methods=['get'], url_path='download')
+    @action(detail=True, methods=['get'], url_path='download', permission_classes=[permissions.AllowAny])
     def download_syllabus(self, request, pk=None):
         syllabus = self.get_object()
         file_handle = syllabus.file.open()

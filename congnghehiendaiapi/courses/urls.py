@@ -21,4 +21,5 @@ urlpatterns = [
     # path('', views.index, name="index"),
     path('admin/', admin_site.urls),
     path('', include(router.urls))
+
 ]

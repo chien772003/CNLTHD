@@ -62,7 +62,7 @@ class Syllabus(models.Model):
     title = models.CharField(max_length=255)
     content = RichTextField()
     curriculum = models.ForeignKey(Curriculum, on_delete=models.CASCADE, null=True)
-
+    file = models.FileField(upload_to='syllabus/%Y/%m/%d/', null=True, blank=True)
     def __str__(self):
         return self.title
 
