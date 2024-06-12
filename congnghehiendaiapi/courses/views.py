@@ -21,9 +21,9 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.ListAPIView
 
 
     def get_permissions(self):
-        if self.action in ['create', 'register_student', 'register_teacher','list'  ]:
+        if self.action in ['create', 'register_student', 'register_teacher']:
             return [permissions.AllowAny()]
-        if self.action in [ 'retrieve', 'approve_student', 'approve_teacher']:
+        if self.action in [ 'retrieve', 'approve_student', 'approve_teacher','list']:
             return [IsSuperuser()]
         return [permissions.IsAuthenticated()]
 
