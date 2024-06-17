@@ -1,12 +1,12 @@
 import axios from "axios";
 
-const BASE_URL = 'http://10.17.20.6:8000//';
+const BASE_URL = 'http://192.168.1.8:8000/';
 
 export const endpoints = {
     'categories': '/categories/',
     'courses': '/courses/',
     'login': '/o/token/',
-    // 'registerGV':
+    'registerGV':'/users/register-teacher/'
 };
 
 export const authAPI = (accessToken ) => axios.create({
