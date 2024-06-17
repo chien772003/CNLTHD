@@ -1,60 +1,52 @@
-// Login.js
-import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
+import React, { useContext, useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity } from 'react-native';
+import styles from "./Styles"
+import MyStyles from '../../styles/MyStyles';
+import MyContext from '../../configs/MyContext';
+import API,{ endpoints } from '../../configs/API';
 
-const Login = ({ navigation, route }) => {
+const Login = ({navigation}) => {
   const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [password, setPass] = useState('');
+  const [user, dispatch] = useContext(MyContext);
 
-  const handleLogin = () => {
-    // Thực hiện xử lý đăng nhập ở đây, ví dụ validate thông tin và gửi request đến server
-    // Nếu thành công, gọi route.params.handleLogin() để thông báo cho App.js là đã đăng nhập thành công
-    if (username === 'user' && password === 'password') {
-      route.params.handleLogin();
+  const login = async () => {
+    try {
+      let res = await API.post(endpoints['login'],{
+        'username':username,
+        'password': password,
+        'client_id':"vSK5NUNtUOzy5AVaB19zOFPnBkkfwSndV1PNhScb",
+        'client_secret': "79DpPlhsDdihacM9s3QmepmDBU6L4UHiqyCGr0b52vudz0mV8mk6lSGYf4pazzll9SCX7hmxa0EzC52ocesvcmlkHE7kpTmpZkwVrAjwf3qvQJeFnfRioLKBn3Srn62a",
+        'grant_type':"password"
+      });
+      console.info(res.data)
+    } catch (ex) {
+      console.error(ex);
     }
-  };
+    
+  }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>Username</Text>
-      <TextInput
-        style={styles.input}
-        value={username}
-        onChangeText={text => setUsername(text)}
-        placeholder="Enter your username"
+      <Text style={MyStyles.subject}>Login</Text>
+      <TextInput 
+        value={username} 
+        onChangeText={t => setUsername(t)} 
+        placeholder='Tên đăng nhập...' 
+        style={styles.input} 
       />
-      <Text style={styles.label}>Password</Text>
-      <TextInput
-        style={styles.input}
-        value={password}
-        onChangeText={text => setPassword(text)}
-        secureTextEntry={true}
-        placeholder="Enter your password"
+      <TextInput 
+        value={password} 
+        onChangeText={t => setPass(t)} 
+        placeholder='Nhập mật khẩu...' 
+        style={styles.input} 
+        secureTextEntry
       />
-      <Button title="Login" onPress={handleLogin} />
+      <TouchableOpacity onPress={login}>
+        <Text style={styles.button}>Login</Text>
+      </TouchableOpacity>
     </View>
-  );
+  )
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  label: {
-    fontSize: 18,
-    marginBottom: 10,
-  },
-  input: {
-    width: '100%',
-    height: 40,
-    borderColor: '#ccc',
-    borderWidth: 1,
-    marginBottom: 20,
-    paddingHorizontal: 10,
-  },
-});
 
 export default Login;
