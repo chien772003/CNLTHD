@@ -6,13 +6,14 @@ from cloudinary.models import CloudinaryField
 from ckeditor.fields import RichTextField
 class User(AbstractUser):
     id = models.AutoField(primary_key=True)  # Trường ID tự động tăng, làm khóa chính
+    username = models.CharField(max_length=150, unique=True, blank=True, null=True)
     first_name = models.CharField(max_length=30)  # Tên (first name)
     last_name = models.CharField(max_length=30)  # Họ (last name)
     birth_year = models.PositiveIntegerField(null=True, blank=True)
     is_teacher = models.BooleanField(default=False)
     is_student = models.BooleanField(default=False)
     avatar = models.ImageField(upload_to='images/avatar/%Y/%m/%d/', null=True, blank=True)
-    HocVi = models.CharField(max_length=50, null=True, blank=True)  # Chỉ dành cho giáo viên
+    degree = models.CharField(max_length=50, null=True, blank=True)  # Chỉ dành cho giáo viên
     email = models.EmailField(blank=True, null=True)
     def __str__(self):
         return self.username
@@ -20,7 +21,7 @@ class User(AbstractUser):
 
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)
-
+    active = models.BooleanField(default=True)
     def __str__(self):
         return self.name
 
@@ -36,7 +37,7 @@ class BaseModel(models.Model):
 class Course(BaseModel):
     name = models.CharField(max_length=255)
     credits = models.PositiveIntegerField()
-    category = models.ForeignKey(Category, on_delete=models.CASCADE, default=1) # Added related_name
+    category = models.ForeignKey(Category, related_name='courses', on_delete=models.CASCADE, default=1) # Added related_name
 
     def __str__(self):
         return self.name
@@ -67,13 +68,13 @@ class Syllabus(models.Model):
         return self.title
 
 class EvaluationCriterion(BaseModel):
-    curriculum = models.ForeignKey(Curriculum, on_delete=models.CASCADE, null=True)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, null=True)
     name = models.CharField(max_length=255)
     weight = models.DecimalField(max_digits=5, decimal_places=2)
     max_score = models.DecimalField(max_digits=5, decimal_places=2)
 
     def __str__(self):
-        return self.name
+        return f"{self.name} ({self.course}) "
 class CurriculumEvaluation(BaseModel):
     curriculum = models.ForeignKey(Curriculum, on_delete=models.CASCADE,null=True)
     evaluation_criterion = models.ForeignKey(EvaluationCriterion, on_delete=models.CASCADE)

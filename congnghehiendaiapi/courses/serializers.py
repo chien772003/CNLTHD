@@ -6,16 +6,20 @@ from .models import User, Category, Course, Curriculum, Syllabus, EvaluationCrit
 
 
 class UserSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(required=False)
+    password = serializers.CharField(required=False)
     class Meta:
         model = User
-        fields = ['id', 'username', 'first_name', 'last_name','email', 'birth_year', 'avatar', 'is_active', 'is_staff', 'is_superuser', 'is_teacher', 'is_student', 'HocVi', 'password']
+        fields = ['id', 'username', 'first_name', 'last_name','email', 'birth_year', 'avatar', 'is_active', 'is_staff', 'is_superuser', 'is_teacher', 'is_student', 'degree', 'password']
         extra_kwargs = {
             'password': {'write_only': True}
         }
 
     def create(self, validated_data):
+        username = validated_data.get('username')
+        password = validated_data.get('password')
         user = User(
-            username=validated_data['username'],
+            username=username,
             first_name=validated_data.get('first_name', ''),
             last_name=validated_data.get('last_name', ''),
             birth_year=validated_data.get('birth_year', None),
@@ -25,23 +29,33 @@ class UserSerializer(serializers.ModelSerializer):
             is_teacher=validated_data.get('is_teacher', False),
             is_student=validated_data.get('is_student', False),
             email=validated_data.get('email',False),
-            HocVi=validated_data.get('HocVi', None)
+            degree=validated_data.get('degree', None)
         )
-        user.set_password(validated_data['password'])
+        if password:  # Kiểm tra xem password có trong validated_data không
+            user.set_password(password)
         user.save()
         return user
 
+class StudentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'first_name', 'last_name', 'email', 'birth_year', 'avatar', 'is_active', 'is_student', 'degree']
+        # Loại bỏ trường 'username' và 'password'
 
+class TeacherSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'password', 'first_name', 'last_name', 'email', 'birth_year', 'avatar', 'is_active', 'is_teacher', 'degree']
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = ['id', 'name']
+        fields = ['id', 'name','active']
 
 class CourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
-        fields = ['id', 'name', 'credits', 'created_at', 'updated_at', 'active']
+        fields = ['id', 'name', 'credits', 'created_at', 'updated_at', 'active','category']
 
 class CurriculumSerializer(serializers.ModelSerializer):
     class Meta:
@@ -56,7 +70,17 @@ class SyllabusSerializer(serializers.ModelSerializer):
 class EvaluationCriterionSerializer(serializers.ModelSerializer):
     class Meta:
         model = EvaluationCriterion
-        fields = ['id', 'curriculum', 'name', 'weight', 'max_score', 'created_at', 'updated_at', 'active']
+        fields = ['id', 'course', 'name', 'weight', 'max_score', 'created_at', 'updated_at', 'active']
+    # def validate_criterion_columns(self, value):
+    #     # Ensure at least 2 and at most 5 columns
+    #     if not 2 <= len(value) <= 5:
+    #         raise serializers.ValidationError("You must provide between 2 and 5 criterion columns.")
+    #     total_weight = sum(column['weight'] for column in value)
+    #     if total_weight != 100:
+    #         raise serializers.ValidationError("The total weight of criterion columns must be 100.")
+    #
+    #     return value
+
 
 
 class CurriculumEvaluationSerializer(serializers.ModelSerializer):
