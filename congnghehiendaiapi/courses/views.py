@@ -181,6 +181,14 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView):
 
         return Response(CourseSerializer(courses, many=True).data)
 
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+
 class CurriculumViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIView, generics.CreateAPIView, generics.UpdateAPIView):
     queryset = Curriculum.objects.all()
     serializer_class = CurriculumSerializer

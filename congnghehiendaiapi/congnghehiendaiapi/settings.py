@@ -24,7 +24,13 @@ SECRET_KEY = 'django-insecure-d6i258th8zx#9#cd815n$qqjn8_!-us2hn=4@4kn_9oq%87azh
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+]
+
+ALLOWED_HOSTS = ["192.168.1.41"]
 
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:8000',
@@ -55,6 +61,7 @@ INSTALLED_APPS = [
     'drf_yasg',
     'ckeditor',
     'ckeditor_uploader',
+    'corsheaders',
     'debug_toolbar',
     'corsheaders',
 ]
@@ -93,6 +100,7 @@ REST_FRAMEWORK = {
 }
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -140,7 +148,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'coursedb',
         'USER': 'root',
-        'PASSWORD': 'Huyphu123@',
+        'PASSWORD': 'Chien@2003',
         'HOST': ''
     }
 }
