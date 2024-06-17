@@ -25,12 +25,9 @@ SECRET_KEY = 'django-insecure-d6i258th8zx#9#cd815n$qqjn8_!-us2hn=4@4kn_9oq%87azh
 DEBUG = True
 
 CORS_ALLOW_ALL_ORIGINS = True
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:8000",
-    "http://127.0.0.1:8000",
-]
 
-ALLOWED_HOSTS = ["192.168.1.41"]
+
+ALLOWED_HOSTS = ['10.17.86.210']
 
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:8000',
@@ -61,7 +58,6 @@ INSTALLED_APPS = [
     'drf_yasg',
     'ckeditor',
     'ckeditor_uploader',
-    'corsheaders',
     'debug_toolbar',
     'corsheaders',
 ]
@@ -148,7 +144,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'coursedb',
         'USER': 'root',
-        'PASSWORD': 'Chien@2003',
+        'PASSWORD': 'Huyphu123@',
         'HOST': ''
     }
 }

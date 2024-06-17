@@ -43,6 +43,18 @@ class UserViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIVi
 
     @action(detail=False, methods=['post'], url_path='register-teacher')
     def register_teacher(self, request):
+        username = request.data.get('username')
+        password = request.data.get('password')
+
+        # Kiểm tra xem username và password đã được cung cấp chưa
+        if not username :
+            return Response({'error': 'Username is required.'}, status=status.HTTP_400_BAD_REQUEST)
+        if not password:
+            return Response({'error': 'Password is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Thêm username và password vào dữ liệu để tạo người dùng
+        request.data['username'] = username
+        request.data['password'] = make_password(password)
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         admin_email = 'huyphu2805@gmail.com'
