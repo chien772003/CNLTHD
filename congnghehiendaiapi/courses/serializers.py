@@ -72,15 +72,30 @@ class EvaluationCriterionSerializer(serializers.ModelSerializer):
     class Meta:
         model = EvaluationCriterion
         fields = ['id', 'course', 'name', 'weight', 'max_score', 'created_at', 'updated_at', 'active']
-    # def validate_criterion_columns(self, value):
-    #     # Ensure at least 2 and at most 5 columns
-    #     if not 2 <= len(value) <= 5:
-    #         raise serializers.ValidationError("You must provide between 2 and 5 criterion columns.")
-    #     total_weight = sum(column['weight'] for column in value)
-    #     if total_weight != 100:
-    #         raise serializers.ValidationError("The total weight of criterion columns must be 100.")
-    #
-    #     return value
+
+    def validate(self, data):
+        course = data['course']
+
+        # Lấy tất cả các tiêu chí đánh giá thuộc về cùng một khóa học
+        criteria = EvaluationCriterion.objects.filter(course=course)
+
+        # Kiểm tra số lượng cột điểm đánh giá
+        if self.instance is None and criteria.count() >= 5:
+            raise serializers.ValidationError("A course cannot have more than 5 evaluation criteria.")
+
+        # Kiểm tra tổng trọng số của các cột điểm đánh giá
+        total_weight = sum(criterion.weight for criterion in criteria)
+        if self.instance:
+            total_weight -= self.instance.weight  # Loại trừ trọng số của tiêu chí hiện tại khi cập nhật
+
+        if total_weight + data.get('weight', 0) > 100:
+            raise serializers.ValidationError("Total weight of evaluation criteria cannot exceed 100%.")
+
+        return data
+    def create(self, validated_data):
+        validated_data['active'] = True  # Đặt active thành True khi tạo mới
+
+        return super().create(validated_data)
 
 
 
@@ -91,6 +106,28 @@ class CurriculumEvaluationSerializer(serializers.ModelSerializer):
     class Meta:
         model = CurriculumEvaluation
         fields = ['id', 'curriculum', 'curriculum_title', 'evaluation_criterion', 'evaluation_criterion_name', 'score', 'created_at', 'updated_at', 'active']
+
+    def validate(self, data):
+        curriculum = data['curriculum']
+        evaluation_criterion = data['evaluation_criterion']
+
+        # Kiểm tra xem evaluation_criterion thuộc về curriculum.course hay không
+        if evaluation_criterion.course != curriculum.course:
+            raise serializers.ValidationError("Evaluation criterion must belong to the corresponding course.")
+
+        # Kiểm tra tổng số cột điểm đánh giá
+        criteria = EvaluationCriterion.objects.filter(curriculum=curriculum)
+        if criteria.count() < 2:
+            raise serializers.ValidationError("A curriculum must have at least 2 evaluation criteria.")
+        if criteria.count() >= 5:
+            raise serializers.ValidationError("A curriculum cannot have more than 5 evaluation criteria.")
+
+        # Kiểm tra tổng trọng số của các cột điểm đánh giá
+        total_weight = sum(criterion.weight for criterion in criteria)
+        if total_weight != 100:
+            raise serializers.ValidationError("Total weight of evaluation criteria must be 100%.")
+
+        return data
 
 class CommentSerializer(serializers.ModelSerializer):
     class Meta:

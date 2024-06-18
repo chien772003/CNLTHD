@@ -73,6 +73,9 @@ class EvaluationCriterion(BaseModel):
     weight = models.DecimalField(max_digits=5, decimal_places=2)
     max_score = models.DecimalField(max_digits=5, decimal_places=2)
 
+    class Meta:
+        unique_together = ('course', 'name')
+
     def __str__(self):
         return f"{self.name} ({self.course}) "
 class CurriculumEvaluation(BaseModel):
@@ -82,6 +85,9 @@ class CurriculumEvaluation(BaseModel):
 
     def __str__(self):
         return f'{self.curriculum.title} - {self.evaluation_criterion.name}'
+    class Meta:
+        unique_together = ['curriculum', 'evaluation_criterion']
+
 
 class Comment(BaseModel):
     curriculum = models.ForeignKey(Curriculum, on_delete=models.CASCADE)

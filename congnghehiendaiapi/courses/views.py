@@ -221,22 +221,34 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
-class CurriculumViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIView, generics.CreateAPIView, generics.UpdateAPIView):
+class CurriculumViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIView, generics.CreateAPIView):
     queryset = Curriculum.objects.all()
     serializer_class = CurriculumSerializer
 
     def get_permissions(self):
         if self.action in ['list']:
             return [permissions.AllowAny()]
-        elif self.action == ['create','retrieve', 'update']:
+        elif self.action == ['create']:
             return [IsSuperuser()]
         return [permissions.IsAuthenticated()]
 
-class SyllabusViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIView, generics.CreateAPIView, generics.UpdateAPIView):
+class SyllabusViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIView, generics.CreateAPIView):
     queryset = Syllabus.objects.all()
     serializer_class = SyllabusSerializer
     filter_backends = [filters.SearchFilter]
     search_fields = ['title', 'curriculum__course__name', 'curriculum__course__credits', 'curriculum__user__username', 'curriculum__start_year', 'curriculum__end_year']
+
+    def partial_update(self, request, pk=None):
+        try:
+            syllabus = Syllabus.objects.get(pk=pk)
+        except Syllabus.DoesNotExist:
+            return Response({'detail': 'Syllabus not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = SyllabusSerializer(syllabus, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def get_queryset(self):
         queryset = Syllabus.objects.all()
@@ -264,7 +276,7 @@ class SyllabusViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveA
     def get_permissions(self):
         if self.action in ['list']:
             return [permissions.AllowAny()]
-        elif self.action in ['create', 'retrieve', 'update']:
+        elif self.action in ['create', 'retrieve']:
             return [IsSuperuser()]
         return [permissions.IsAuthenticated()]
 
@@ -276,16 +288,23 @@ class SyllabusViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveA
         response['Content-Disposition'] = f'attachment; filename="{syllabus.file.name}"'
         return response
 
-class EvaluationCriterionViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIView, generics.CreateAPIView, generics.UpdateAPIView):
+class EvaluationCriterionViewSet(viewsets.ViewSet, generics.ListAPIView):
     queryset = EvaluationCriterion.objects.all()
     serializer_class = EvaluationCriterionSerializer
 
     def get_permissions(self):
         if self.action in ['list']:
             return [permissions.AllowAny()]
-        elif self.action == ['create','retrieve', 'update']:
+        elif self.action == ['create']:
             return [IsSuperuser()]
         return [permissions.IsAuthenticated()]
+    def create(self, request):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 
