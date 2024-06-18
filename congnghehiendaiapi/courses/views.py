@@ -46,28 +46,29 @@ class UserViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIVi
         username = request.data.get('username')
         password = request.data.get('password')
         email = request.data.get('email')
+        avatar = request.data.get('avatar')
         degree = request.data.get('degree')
-
-        # Kiểm tra xem các trường đã được cung cấp chưa
-        if not username:
+        # Kiểm tra xem username và password đã được cung cấp chưa
+        if not username :
             return Response({'error': 'Username is required.'}, status=status.HTTP_400_BAD_REQUEST)
         if not password:
             return Response({'error': 'Password is required.'}, status=status.HTTP_400_BAD_REQUEST)
         if not email:
             return Response({'error': 'Email is required.'}, status=status.HTTP_400_BAD_REQUEST)
+        if not avatar:
+            return Response({'error': 'Avatar is required.'}, status=status.HTTP_400_BAD_REQUEST)
         if not degree:
             return Response({'error': 'Degree is required.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Sao chép dữ liệu yêu cầu
-        request_data = request.data.copy()
+        if User.objects.filter(username=username).exists():
+            return Response({'error': 'This username has been registed before. Try another username.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Thêm username, password, email và degree vào dữ liệu để tạo người dùng
-        request_data['username'] = username
-        request_data['password'] = make_password(password)
-        request_data['email'] = email
-        request_data['degree'] = degree
-
-        serializer = self.get_serializer(data=request_data)
+        if User.objects.filter(email=email).exists():
+            return Response({'error': 'This email has been registed before. Try another email.'}, status=status.HTTP_400_BAD_REQUEST)
+        # Thêm username và password vào dữ liệu để tạo người dùng
+        request.data['username'] = username
+        request.data['password'] = make_password(password)
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         user = serializer.save(is_active=False, is_teacher=True)
@@ -128,7 +129,6 @@ class UserViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIVi
 
         user.username = slugify(username)
         user.is_active = True
-        user.is_staff = True
         group_name = 'Student'
         group = Group.objects.get(name=group_name)
         user.groups.add(group)
