@@ -68,6 +68,15 @@ class SyllabusSerializer(serializers.ModelSerializer):
         model = Syllabus
         fields = ['id', 'title', 'content', 'curriculum', 'file']
 
+    def clean(self):
+        # Check if the curriculum is within 2 consecutive years
+        if self.curriculum:
+            cur_start_year = self.curriculum.start_year
+            cur_end_year = self.curriculum.end_year
+
+            if not (cur_start_year <= self.curriculum.start_year <= cur_end_year <= self.curriculum.end_year):
+                raise serializers.ValidationError('Syllabus can only be associated with up to 2 consecutive years of a curriculum.')
+
 class EvaluationCriterionSerializer(serializers.ModelSerializer):
     class Meta:
         model = EvaluationCriterion
@@ -88,7 +97,7 @@ class EvaluationCriterionSerializer(serializers.ModelSerializer):
         if self.instance:
             total_weight -= self.instance.weight  # Loại trừ trọng số của tiêu chí hiện tại khi cập nhật
 
-        if total_weight + data.get('weight', 0) > 100:
+        if total_weight + data.get('weight', 0) > 1:
             raise serializers.ValidationError("Total weight of evaluation criteria cannot exceed 100%.")
 
         return data
@@ -115,17 +124,6 @@ class CurriculumEvaluationSerializer(serializers.ModelSerializer):
         if evaluation_criterion.course != curriculum.course:
             raise serializers.ValidationError("Evaluation criterion must belong to the corresponding course.")
 
-        # Kiểm tra tổng số cột điểm đánh giá
-        criteria = EvaluationCriterion.objects.filter(curriculum=curriculum)
-        if criteria.count() < 2:
-            raise serializers.ValidationError("A curriculum must have at least 2 evaluation criteria.")
-        if criteria.count() >= 5:
-            raise serializers.ValidationError("A curriculum cannot have more than 5 evaluation criteria.")
-
-        # Kiểm tra tổng trọng số của các cột điểm đánh giá
-        total_weight = sum(criterion.weight for criterion in criteria)
-        if total_weight != 100:
-            raise serializers.ValidationError("Total weight of evaluation criteria must be 100%.")
 
         return data
 
