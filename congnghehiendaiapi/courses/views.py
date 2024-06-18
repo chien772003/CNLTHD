@@ -45,19 +45,31 @@ class UserViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIVi
     def register_teacher(self, request):
         username = request.data.get('username')
         password = request.data.get('password')
+        email = request.data.get('email')
+        degree = request.data.get('degree')
 
-        # Kiểm tra xem username và password đã được cung cấp chưa
-        if not username :
+        # Kiểm tra xem các trường đã được cung cấp chưa
+        if not username:
             return Response({'error': 'Username is required.'}, status=status.HTTP_400_BAD_REQUEST)
         if not password:
             return Response({'error': 'Password is required.'}, status=status.HTTP_400_BAD_REQUEST)
+        if not email:
+            return Response({'error': 'Email is required.'}, status=status.HTTP_400_BAD_REQUEST)
+        if not degree:
+            return Response({'error': 'Degree is required.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Thêm username và password vào dữ liệu để tạo người dùng
-        request.data['username'] = username
-        request.data['password'] = make_password(password)
-        serializer = self.get_serializer(data=request.data)
+        # Sao chép dữ liệu yêu cầu
+        request_data = request.data.copy()
+
+        # Thêm username, password, email và degree vào dữ liệu để tạo người dùng
+        request_data['username'] = username
+        request_data['password'] = make_password(password)
+        request_data['email'] = email
+        request_data['degree'] = degree
+
+        serializer = self.get_serializer(data=request_data)
         serializer.is_valid(raise_exception=True)
-        admin_email = 'huyphu2805@gmail.com'
+
         user = serializer.save(is_active=False, is_teacher=True)
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -86,8 +98,17 @@ class UserViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIVi
      #----------------Sinh Viên Đăng Ký-----------------
     @action(detail=False, methods=['post'], url_path='register-student')
     def register_student(self, request):
+        email = request.data.get('email')
+        if not email:
+            return Response({'error': 'Email is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Kiểm tra xem email đã tồn tại chưa
+        if User.objects.filter(email=email).exists():
+            return Response({'error': 'This email has been registered before. Try another email.'}, status=status.HTTP_400_BAD_REQUEST)
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+        # if User.objects.filter(email=email).exists():
+        #     return Response({'error': 'This email has been registed before. Try another email.'}, status=status.HTTP_400_BAD_REQUEST)
         user = serializer.save(is_active=False, is_student=True)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     @action(detail=True, methods=['patch'], url_path='approve-student')
@@ -100,9 +121,8 @@ class UserViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIVi
         username = user.email.split('@')[0]
 
         # Kiểm tra xem username đã tồn tại chưa
-        if User.objects.filter(username=username).exists():
-            # Nếu đã tồn tại, thêm một số ngẫu nhiên vào cuối
-            username += ''.join(random.choices(string.digits, k=4))
+        # if User.objects.filter(username=username).exists():
+        #     return Response({'error': 'This email has been registed before. Try another email.'}, status=status.HTTP_400_BAD_REQUEST)
         #Set mật khẩu mặc định là 123456
         user.set_password('123456')
 

@@ -8,6 +8,7 @@ from .models import User, Category, Course, Curriculum, Syllabus, EvaluationCrit
 class UserSerializer(serializers.ModelSerializer):
     username = serializers.CharField(required=False)
     password = serializers.CharField(required=False)
+    birth_year = serializers.CharField(required=True)
     class Meta:
         model = User
         fields = ['id', 'username', 'first_name', 'last_name','email', 'birth_year', 'avatar', 'is_active', 'is_staff', 'is_superuser', 'is_teacher', 'is_student', 'degree', 'password']
