@@ -10,10 +10,8 @@ import Home from './components/Home/Home';
 import Courses from './components/Courses/Courses';
 import Curriculum from './components/Curriculum/Curriculum';
 import Logout from './components/Login/Logout';
-
 import Reducer from './configs/Reducer';
 import MyContext from './configs/MyContext';
-import Register from './components/Login/RegisterGV';
 import RegisterGV from './components/Login/RegisterGV';
 
 const Drawer = createDrawerNavigator();
@@ -38,7 +36,7 @@ const App = () => {
           headerRight: user ? () => <Logout navigation={navigation} dispatch={dispatch} /> : null,
         })}>
           {user === null ? (
-            <Drawer.Screen name="Register" component={RegisterGV} />
+            <Drawer.Screen name="Register" component={Login} />
           ) : (
             <Drawer.Screen name="App" component={TabNavigator} />
           )}
