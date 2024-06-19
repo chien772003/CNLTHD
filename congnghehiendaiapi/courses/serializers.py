@@ -58,15 +58,54 @@ class CourseSerializer(serializers.ModelSerializer):
         model = Course
         fields = ['id', 'name', 'credits', 'created_at', 'updated_at', 'active','category']
 
+    def validate(self, data):
+        category = data.get('category')
+        name = data['name']
+        courses = Course.objects.all()
+
+        if not category:
+            raise serializers.ValidationError("Category is required.")
+        if courses.filter(name=name).exists():
+            raise serializers.ValidationError("A course with this name already exists.")
+
+    def create(self, validated_data):
+        category = validated_data.pop('category')
+        validated_data['active'] = True
+        course = Course.objects.create(category=category, **validated_data)
+
+        return course
 class CurriculumSerializer(serializers.ModelSerializer):
     class Meta:
         model = Curriculum
         fields = ['id', 'course', 'user', 'title', 'description', 'start_year', 'end_year', 'created_at', 'updated_at', 'active']
 
+    def validate(self, data):
+        course = data.get('course')
+        start_year = data.get('start_year')
+        end_year = data.get('end_year')
+
+
+        if Curriculum.objects.filter(course=course, start_year=start_year, end_year=end_year).exists():
+            raise serializers.ValidationError("A curriculum with this course and time period already exists.")
+        return data
+    def create(self, validated_data):
+        validated_data['active'] = True  # Đặt active thành True khi tạo mới
+
+        return super().create(validated_data)
 class SyllabusSerializer(serializers.ModelSerializer):
+    file = serializers.FileField(required=True)
+    curriculum = serializers.PrimaryKeyRelatedField(queryset=Curriculum.objects.all(), required=True)
     class Meta:
         model = Syllabus
         fields = ['id', 'title', 'content', 'curriculum', 'file']
+
+    def validate(self, data):
+        title = data['title']
+        syllabus = Syllabus.objects.all()
+
+        if syllabus.filter(title=title).exists():
+            raise serializers.ValidationError("A syllabus with this name already exists.")
+        return data
 
     def clean(self):
         # Check if the curriculum is within 2 consecutive years
@@ -77,16 +116,26 @@ class SyllabusSerializer(serializers.ModelSerializer):
             if not (cur_start_year <= self.curriculum.start_year <= cur_end_year <= self.curriculum.end_year):
                 raise serializers.ValidationError('Syllabus can only be associated with up to 2 consecutive years of a curriculum.')
 
+
 class EvaluationCriterionSerializer(serializers.ModelSerializer):
     class Meta:
         model = EvaluationCriterion
-        fields = ['id', 'course', 'name', 'weight', 'max_score', 'created_at', 'updated_at', 'active']
+        fields = ['id', 'curriculum', 'name', 'weight', 'max_score', 'created_at', 'updated_at', 'active']
 
     def validate(self, data):
-        course = data['course']
+        curriculum = data.get('curriculum')
+        name = data['name']
+
+        if not curriculum:
+            raise serializers.ValidationError("Curriculum is required.")
+
 
         # Lấy tất cả các tiêu chí đánh giá thuộc về cùng một khóa học
-        criteria = EvaluationCriterion.objects.filter(course=course)
+        criteria = EvaluationCriterion.objects.filter(curriculum=curriculum)
+
+        # Kiểm tra trùng tên tiêu chí đánh giá trong cùng một khóa học
+        if criteria.filter(name=name).exists():
+            raise serializers.ValidationError("An evaluation criterion with this name already exists for this curriculum.")
 
         # Kiểm tra số lượng cột điểm đánh giá
         if self.instance is None and criteria.count() >= 5:
@@ -109,26 +158,28 @@ class EvaluationCriterionSerializer(serializers.ModelSerializer):
 
 
 class CurriculumEvaluationSerializer(serializers.ModelSerializer):
-    curriculum_title = serializers.CharField(source='curriculum.title', read_only=True)
+    syllabus_title = serializers.CharField(source='syllabus.title', read_only=True)
     evaluation_criterion_name = serializers.CharField(source='evaluation_criterion.name', read_only=True)
 
     class Meta:
         model = CurriculumEvaluation
-        fields = ['id', 'curriculum', 'curriculum_title', 'evaluation_criterion', 'evaluation_criterion_name', 'score', 'created_at', 'updated_at', 'active']
+        fields = ['id', 'syllabus', 'syllabus_title', 'evaluation_criterion', 'evaluation_criterion_name', 'score', 'created_at', 'updated_at', 'active']
 
     def validate(self, data):
-        curriculum = data['curriculum']
+        syllabus = data['syllabus']
         evaluation_criterion = data['evaluation_criterion']
 
         # Kiểm tra xem evaluation_criterion thuộc về curriculum.course hay không
-        if evaluation_criterion.course != curriculum.course:
+        if evaluation_criterion.curriculum != syllabus.curriculum:
             raise serializers.ValidationError("Evaluation criterion must belong to the corresponding course.")
-
-
         return data
 
+    def create(self, validated_data):
+        validated_data['active'] = True
+
+        return super().create(validated_data)
 class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
-        fields = ['id', 'curriculum', 'user', 'content', 'created_at', 'updated_at', 'active']
+        fields = ['id', 'syllabus', 'user', 'content', 'created_at', 'updated_at', 'active']
         read_only_fields = ['id', 'user']
