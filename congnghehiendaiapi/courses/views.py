@@ -229,7 +229,7 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView,generics.CreateAPIVie
     #     return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
-class CurriculumViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIView, generics.CreateAPIView, generics.DestroyAPIView):
+class CurriculumViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIView, generics.DestroyAPIView, generics.CreateAPIView):
     queryset = Curriculum.objects.all()
     serializer_class = CurriculumSerializer
 
@@ -239,6 +239,7 @@ class CurriculumViewSet(viewsets.ViewSet, generics.ListAPIView, generics.Retriev
         elif self.action == ['create','destroy','retrieve']:
             return [IsSuperuser()]
         return [permissions.IsAuthenticated()]
+
 
 class SyllabusViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIView, generics.CreateAPIView):
     queryset = Syllabus.objects.all()
@@ -349,6 +350,7 @@ class CurriculumEvaluationViewSet(viewsets.ViewSet, generics.ListCreateAPIView, 
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class CommentViewSet(viewsets.ViewSet, generics.ListAPIView, generics.DestroyAPIView):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
@@ -363,23 +365,25 @@ class CommentViewSet(viewsets.ViewSet, generics.ListAPIView, generics.DestroyAPI
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
-    @action(detail=False, methods=['get'], url_path='by-curriculum/(?P<curriculum_id>[^/.]+)')
-    def get_comments_by_curriculum(self, request, curriculum_id=None):
-        if not curriculum_id:
-            return Response({'error': 'Curriculum ID is required'}, status=status.HTTP_400_BAD_REQUEST)
+    @action(detail=False, methods=['get'], url_path='by-syllabus/(?P<syllabus_id>[^/.]+)')
+    def get_comments_by_syllabus(self, request, syllabus_id=None):
+        if not syllabus_id:
+            return Response({'error': 'Syllabus ID is required'}, status=status.HTTP_400_BAD_REQUEST)
 
-        comments = Comment.objects.filter(curriculum_id=curriculum_id)
+        comments = Comment.objects.filter(syllabus_id=syllabus_id)
         serializer = self.get_serializer(comments, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
     @action(detail=True, methods=['post'], url_path='add-comment')
     def add_comment(self, request, pk=None):
-        curriculum = get_object_or_404(Curriculum, pk=pk)
+        syllabus = get_object_or_404(Syllabus, pk=pk)
         content = request.data.get('content')
         if not content:
             return Response({'error': 'Content is required'}, status=status.HTTP_400_BAD_REQUEST)
+        if not syllabus:
+            return Response({'error': 'Syllabus is required'}, status=status.HTTP_400_BAD_REQUEST)
 
-        comment = Comment.objects.create(user=request.user, curriculum=curriculum, content=content)
+        comment = Comment.objects.create(user=request.user, syllabus=syllabus, content=content)
         serializer = CommentSerializer(comment)
         return Response(serializer.data, status=status.HTTP_201_CREATED)

@@ -67,7 +67,7 @@ class CourseSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Category is required.")
         if courses.filter(name=name).exists():
             raise serializers.ValidationError("A course with this name already exists.")
-
+        return data
     def create(self, validated_data):
         category = validated_data.pop('category')
         validated_data['active'] = True
@@ -77,7 +77,7 @@ class CourseSerializer(serializers.ModelSerializer):
 class CurriculumSerializer(serializers.ModelSerializer):
     class Meta:
         model = Curriculum
-        fields = ['id', 'course', 'user', 'title', 'description', 'start_year', 'end_year', 'created_at', 'updated_at', 'active']
+        fields = ['id', 'course', 'title', 'description', 'start_year', 'end_year', 'created_at', 'updated_at', 'active']
 
     def validate(self, data):
         course = data.get('course')
@@ -89,9 +89,39 @@ class CurriculumSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("A curriculum with this course and time period already exists.")
         return data
     def create(self, validated_data):
+        request = self.context.get('request')
+        user = request.user
         validated_data['active'] = True  # Đặt active thành True khi tạo mới
+        course_id = validated_data.get('course')
+        title = validated_data.get('title')
+        description = validated_data.get('description')
+        start_year = validated_data.get('start_year')
+        end_year = validated_data.get('end_year')
 
-        return super().create(validated_data)
+
+        # Kiểm tra xem tất cả các trường dữ liệu có được cung cấp hay không
+        if not course_id:
+            raise serializers.ValidationError({'course': 'Course is required'})
+        if not title:
+            raise serializers.ValidationError({'title': 'Title is required'})
+        if not description:
+            raise serializers.ValidationError({'description': 'Description is required'})
+        if not start_year:
+            raise serializers.ValidationError({'start_year': 'Start year is required'})
+        if not end_year:
+            raise serializers.ValidationError({'end_year': 'End year is required'})
+
+        # Tạo đối tượng Curriculum
+        curriculum = Curriculum.objects.create(
+            user=user,
+            course=course_id,
+            title=title,
+            description=description,
+            start_year=start_year,
+            end_year=end_year
+        )
+
+        return curriculum
 class SyllabusSerializer(serializers.ModelSerializer):
     file = serializers.FileField(required=True)
     curriculum = serializers.PrimaryKeyRelatedField(queryset=Curriculum.objects.all(), required=True)
